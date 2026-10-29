@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="순발력">
+<title>순발력 챌린지</title>
+<style>
+:root{--bg:#0f1117;--panel:#181b25;--panel2:#1f2330;--line:#2a2f3d;--text:#e8eaf0;--sub:#8b91a3;--accent:#7c5cff;--red:#ef4444;--blue:#3b82f6;--green:#22c55e;--yellow:#eab308;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);height:100%;overscroll-behavior:none}
+body{color:var(--text);font-family:-apple-system,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.hidden{display:none!important}
+.screen{position:fixed;inset:0;padding:calc(var(--st) + 14px) calc(var(--sr) + 14px) calc(var(--sb) + 14px) calc(var(--sl) + 14px)}
+.inner{max-width:760px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+
+/* ---------- MENU ---------- */
+#menu{overflow-y:auto;-webkit-overflow-scrolling:touch}
+#menu .inner{height:auto;min-height:100%}
+h1{font-size:28px;font-weight:900;letter-spacing:-.5px;margin-top:6px}
+h1 span{color:var(--accent)}
+.subtitle{color:var(--sub);margin-top:6px;font-size:14px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-top:18px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;cursor:pointer;transition:transform .1s,border-color .12s,background .12s}
+.card:active{transform:scale(.98);background:var(--panel2)}
+@media (hover:hover){.card:hover{border-color:var(--accent);background:var(--panel2)}}
+.card-top{display:flex;align-items:center;gap:10px}
+.num{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;flex:none}
+.card h3{font-size:18px;font-weight:800;flex:1}
+.play{font-size:13px;font-weight:800;color:var(--accent)}
+.card p{color:#c4c8d4;font-size:14px;line-height:1.55;margin-top:9px}
+.card p b{color:#fff}
+.meta{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--sub)}
+.meta b{color:var(--text)}
+.foot{color:var(--sub);font-size:12px;margin:18px 0 4px;text-align:center;line-height:1.6}
+
+/* ---------- GAME ---------- */
+#game{touch-action:none}
+.hud{display:flex;align-items:center;gap:10px;flex:none}
+.hud .title{font-weight:800;font-size:17px;flex:1}
+.xbtn{width:38px;height:38px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--sub);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stats{display:flex;gap:8px;margin-top:10px;flex:none}
+.stat{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 11px;min-width:0}
+.stat span{display:block;font-size:11px;color:var(--sub)}
+.stat b{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat small{font-size:12px;color:var(--accent);margin-left:3px;font-weight:700}
+.bar{height:6px;background:var(--panel);border-radius:6px;margin-top:10px;overflow:hidden;flex:none}
+#timebar{height:100%;width:100%;background:linear-gradient(90deg,var(--accent),#b39cff);border-radius:6px}
+.arena{position:relative;flex:1;min-height:180px;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;touch-action:none}
+.arena.flash-good{animation:fg .35s}
+.arena.flash-bad{animation:fbad .35s}
+@keyframes fg{0%{border-color:var(--green);box-shadow:0 0 0 3px #22c55e55 inset}100%{}}
+@keyframes fbad{0%{border-color:var(--red);box-shadow:0 0 0 3px #ef444466 inset;transform:translateX(-6px)}25%{transform:translateX(6px)}50%{transform:translateX(-4px)}75%{transform:translateX(3px)}100%{transform:none}}
+#stage{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.count{font-size:min(110px,28vw);font-weight:900;color:var(--accent);animation:pop .6s}
+@keyframes pop{0%{transform:scale(1.6);opacity:0}30%{transform:scale(1);opacity:1}100%{opacity:.6}}
+.plus{font-size:48px;color:#3a4052;font-weight:300}
+.word{font-size:clamp(56px,19vw,110px);font-weight:900;letter-spacing:-2px;animation:appear .1s}
+@keyframes appear{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+.shape{width:min(180px,46vw,40vh);height:min(180px,46vw,40vh);border-radius:50%;animation:appear .08s}
+.shape.wait{background:#252a38;animation:breath 1.2s infinite}
+@keyframes breath{50%{transform:scale(.94)}}
+.shape.go{background:var(--green);box-shadow:0 0 70px #22c55e88}
+.shape.red{background:var(--red);box-shadow:0 0 70px #ef444488}
+.shape.square{background:var(--green);border-radius:16%;box-shadow:0 0 70px #22c55e66}
+.waittxt{color:var(--sub);margin-top:16px;font-size:14px}
+.arrows{display:flex;gap:min(6px,1.2vw);animation:appear .08s}
+.arr{width:clamp(44px,15.5vw,80px);height:clamp(44px,15.5vw,80px)}
+.target{position:absolute;border-radius:50%;background:radial-gradient(circle,#fff 0 18%,var(--accent) 19% 45%,#fff 46% 58%,var(--accent) 59%);animation:shrink linear forwards;touch-action:none}
+.target.bomb{background:radial-gradient(circle,#111 0 30%,var(--red) 31%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900}
+.target.bomb::after{content:"\2715";font-size:var(--fs)}
+@keyframes shrink{from{transform:scale(1)}to{transform:scale(.15);opacity:.4}}
+.target.popped{animation:burst .2s forwards!important}
+@keyframes burst{to{transform:scale(1.6);opacity:0}}
+.fb{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:26px;pointer-events:none;animation:float .7s forwards;text-align:center;white-space:nowrap;z-index:5;text-shadow:0 2px 10px #000a}
+.fb small{display:block;font-size:13px;font-weight:700;opacity:.85}
+.fb.good{color:var(--green)}
+.fb.bad{color:var(--red)}
+@keyframes float{0%{opacity:0;margin-top:8px}15%{opacity:1;margin-top:0}100%{opacity:0;margin-top:-34px}}
+
+.controls{display:grid;gap:10px;margin-top:10px;flex:none}
+.controls.c4{grid-template-columns:repeat(4,1fr)}
+.controls.c2{grid-template-columns:repeat(2,1fr)}
+.controls.c1{grid-template-columns:1fr}
+.controls button{position:relative;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:18px;height:72px;font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .05s,filter .1s;touch-action:none}
+.controls button.press{transform:scale(.95);filter:brightness(1.25)}
+.controls.colors button{background:var(--c);border-color:transparent;color:#fff;text-shadow:0 1px 3px #0006}
+.controls.colors button[data-i="3"]{color:#2a2000;text-shadow:none}
+.controls.big button{height:110px;font-size:22px}
+kbd{font-family:inherit;font-size:11px;border:1px solid #ffffff40;border-radius:5px;padding:1px 6px;font-weight:600;opacity:.75}
+.hint{color:var(--sub);font-size:13px;text-align:center;margin-top:10px;line-height:1.5;flex:none}
+.hint b{color:var(--text)}
+
+/* phone portrait */
+@media (max-width:600px){
+  .controls.c4{grid-template-columns:repeat(2,1fr)}
+  .controls.c4 button{height:min(84px,11vh)}
+  .controls.c2 button{height:min(120px,16vh);font-size:26px}
+  .controls.big button{height:min(120px,15vh)}
+  .stat b{font-size:18px}
+}
+/* short screens / landscape phone */
+@media (max-height:640px){
+  .hint{display:none}
+  .stats{margin-top:6px}.stat{padding:5px 10px}.stat b{font-size:16px}
+  .controls button,.controls.c4 button,.controls.c2 button,.controls.big button{height:60px;font-size:17px}
+  .controls.c4{grid-template-columns:repeat(4,1fr)}
+}
+/* touch devices: no keyboard hints */
+@media (hover:none),(pointer:coarse){kbd{display:none}}
+
+/* ---------- RESULT ---------- */
+#result .inner{justify-content:center;text-align:center;overflow-y:auto}
+.rtitle{color:var(--sub);font-size:14px}
+.grade{font-size:min(120px,30vw);font-weight:900;line-height:1;margin-top:8px;background:linear-gradient(135deg,var(--accent),#ff7ab6);-webkit-background-clip:text;background-clip:text;color:transparent;animation:pop .6s}
+.comment{color:#c4c8d4;margin-top:8px;font-size:15px}
+.bigscore{font-size:40px;font-weight:900;margin-top:14px;font-variant-numeric:tabular-nums}
+.newbest{display:inline-block;background:var(--accent);color:#fff;font-size:12px;font-weight:800;padding:3px 9px;border-radius:20px;margin-left:8px;vertical-align:middle}
+.rgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}
+.rgrid .stat{text-align:left}
+.btns{display:flex;gap:10px;justify-content:center;margin-top:20px}
+.primary,.second{border-radius:16px;height:56px;padding:0 26px;font-size:16px;font-weight:800;cursor:pointer}
+.primary{background:var(--accent);color:#fff;border:none}
+.second{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+@media (max-width:600px){
+  .rgrid{grid-template-columns:repeat(2,1fr)}
+  .btns{flex-direction:column}.primary,.second{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- MENU -->
+<section id="menu" class="screen">
+  <div class="inner">
+    <h1>순발력 <span>챌린지</span></h1>
+    <p class="subtitle">빨리 누르기만 하면 지는 4가지 반응 게임.<br>판단력 + 속도 + 참을성.</p>
+    <div class="grid" id="cards"></div>
+    <p class="foot" id="footTxt"></p>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen hidden">
+  <div class="inner">
+    <div class="hud">
+      <div class="title" id="modeTitle"></div>
+      <button class="xbtn" id="quit" aria-label="메뉴로">&#x2715;</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>점수</span><b id="score">0</b></div>
+      <div class="stat"><span>콤보</span><b id="combo">0</b><small id="mult"></small></div>
+      <div class="stat"><span id="progLabel">라운드</span><b id="prog">0</b></div>
+    </div>
+    <div class="bar"><div id="timebar"></div></div>
+    <div class="arena" id="arena"><div id="stage"></div></div>
+    <div class="controls" id="controls"></div>
+    <p class="hint" id="hint"></p>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section id="result" class="screen hidden">
+  <div class="inner" id="resultBody"></div>
+</section>
+
+<script>
+const $ = s => document.querySelector(s);
+const rand = n => Math.floor(Math.random() * n);
+const now = () => performance.now();
+const arena = $('#arena'), stage = $('#stage'), controls = $('#controls');
+const TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+const COLORS = [
+  { name: '빨강', hex: '#ef4444', key: 'd' },
+  { name: '파랑', hex: '#3b82f6', key: 'f' },
+  { name: '초록', hex: '#22c55e', key: 'j' },
+  { name: '노랑', hex: '#eab308', key: 'k' },
+];
+
+let S = null;
+
+/* ---------- helpers ---------- */
+function later(fn, ms) { const t = setTimeout(fn, ms); S.timers.push(t); return t; }
+function clearTimers() { if (!S) return; S.timers.forEach(clearTimeout); S.timers = []; cancelAnimationFrame(S.raf); }
+function runBar(ms) { const b = $('#timebar'); b.style.transition = 'none'; b.style.width = '100%'; void b.offsetWidth; b.style.transition = `width ${ms}ms linear`; b.style.width = '0%'; }
+function stopBar() { const b = $('#timebar'); const w = getComputedStyle(b).width; b.style.transition = 'none'; b.style.width = w; }
+function fullBar() { const b = $('#timebar'); b.style.transition = 'none'; b.style.width = '100%'; }
+function mult() { return 1 + Math.min(Math.max(S.combo - 1, 0), 10) * 0.1; }
+function best(k) { try { return +(localStorage.getItem('rx_best_' + k) || 0); } catch (e) { return 0; } }
+function setBest(k, v) { try { localStorage.setItem('rx_best_' + k, v); } catch (e) {} }
+function show(id) { ['menu', 'game', 'result'].forEach(x => $('#' + x).classList.toggle('hidden', x !== id)); }
+
+function updHud() {
+  $('#score').textContent = S.score.toLocaleString();
+  $('#combo').textContent = S.combo;
+  $('#mult').textContent = S.combo > 1 ? 'x' + mult().toFixed(1) : '';
+  if (S.m.trials) { $('#progLabel').textContent = '라운드'; $('#prog').textContent = `${S.trial}/${S.m.trials}`; }
+}
+
+function fb(main, sub, cls, pos) {
+  const d = document.createElement('div');
+  d.className = 'fb ' + cls;
+  d.innerHTML = main + (sub ? `<small>${sub}</small>` : '');
+  d.style.left = pos ? Math.min(Math.max(pos.x, 50), arena.clientWidth - 50) + 'px' : '50%';
+  d.style.top = pos ? Math.max(pos.y, 30) + 'px' : '18%';
+  arena.appendChild(d);
+  setTimeout(() => d.remove(), 700);
+  arena.classList.remove('flash-good', 'flash-bad'); void arena.offsetWidth;
+  arena.classList.add(cls === 'good' ? 'flash-good' : 'flash-bad');
+}
+
+function hit(rt, limit, pos) {
+  S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo); S.correct++;
+  S.rts.push(rt);
+  const speed = Math.max(0, Math.round((1 - rt / limit) * 100));
+  const pts = Math.round((100 + speed) * mult());
+  S.score += pts;
+  fb('+' + pts, rt + 'ms', 'good', pos);
+  updHud();
+}
+function ok(base, msg, pos) {
+  S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo); S.correct++;
+  const pts = Math.round(base * mult());
+  S.score += pts;
+  fb('+' + pts, msg, 'good', pos);
+  updHud();
+}
+function miss(msg, pen = 50, pos) {
+  S.combo = 0; S.wrong++;
+  S.score = Math.max(0, S.score - pen);
+  fb(msg, '-' + pen, 'bad', pos);
+  buzz(pen >= 100 ? [60, 40, 60] : 45);
+  updHud();
+}
+function bindBtn(btn, fn) {
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); fn(); });
+}
+function flashBtn(i) {
+  const b = controls.children[i]; if (!b) return;
+  b.classList.add('press'); setTimeout(() => b.classList.remove('press'), 90);
+}
+
+/* ---------- MODE 1: 색깔 함정 (Stroop) ---------- */
+const Stroop = {
+  title: '색깔 함정', color: '#ef4444', trials: 20,
+  desc: '단어 뜻 말고 <b>글자 색</b>을 눌러라. "파랑"이 빨간색이면 빨강!',
+  keys: '색 버튼 탭 · PC는 D F J K',
+  setup() {
+    controls.className = 'controls c4 colors';
+    controls.innerHTML = COLORS.map((c, i) => `<button data-i="${i}" style="--c:${c.hex}">${c.name}<kbd>${c.key.toUpperCase()}</kbd></button>`).join('');
+    [...controls.children].forEach((b, i) => bindBtn(b, () => Stroop.input(i)));
+  },
+  begin() { Stroop.next(); },
+  next() {
+    if (S.trial >= Stroop.trials) return end();
+    S.trial++; updHud(); S.accept = false; fullBar();
+    stage.innerHTML = '<div class="plus">+</div>';
+    later(() => {
+      const word = rand(4);
+      let ink = word;
+      if (Math.random() < 0.75) { do { ink = rand(4); } while (ink === word); }
+      stage.innerHTML = `<div class="word" style="color:${COLORS[ink].hex}">${COLORS[word].name}</div>`;
+      S.answer = ink; S.limit = Math.max(950, 2100 - S.trial * 55); S.t0 = now(); S.accept = true;
+      runBar(S.limit);
+      S.tout = later(() => { S.accept = false; miss('시간 초과'); later(Stroop.next, 600); }, S.limit);
+    }, 350 + Math.random() * 450);
+  },
+  input(i) {
+    flashBtn(i);
+    if (!S.running || !S.accept) return;
+    S.accept = false; clearTimeout(S.tout); stopBar();
+    const rt = Math.round(now() - S.t0);
+    if (i === S.answer) hit(rt, S.limit); else miss('틀림!');
+    later(Stroop.next, 500);
+  },
+  key(e) { const i = COLORS.findIndex(c => c.key === e.key.toLowerCase()); if (i >= 0) Stroop.input(i); },
+};
+
+/* ---------- MODE 2: 누를까 말까 (Go / No-Go) ---------- */
+const GoNoGo = {
+  title: '누를까 말까', color: '#22c55e', trials: 20,
+  desc: '<b>초록 동그라미</b>일 때만 탭. 빨간 원, 초록 네모는 함정. 미리 누르면 감점.',
+  keys: '화면 아무 데나 탭 · PC는 Space',
+  setup() {
+    controls.className = 'controls c1 big';
+    controls.innerHTML = '<button>지금! <kbd>SPACE</kbd></button>';
+    bindBtn(controls.children[0], () => GoNoGo.press());
+  },
+  begin() { GoNoGo.next(); },
+  next() {
+    if (S.trial >= GoNoGo.trials) return end();
+    S.trial++; updHud(); fullBar(); S.phase = 'wait';
+    stage.innerHTML = '<div class="shape wait"></div><div class="waittxt">기다려...</div>';
+    later(GoNoGo.stim, 900 + Math.random() * 2100);
+  },
+  stim() {
+    const r = Math.random();
+    const t = S.trial <= 2 ? 'go' : r < 0.6 ? 'go' : r < 0.8 ? 'red' : 'square';
+    S.stype = t; S.phase = 'stim';
+    stage.innerHTML = `<div class="shape ${t}"></div>`;
+    S.limit = t === 'go' ? Math.max(480, 880 - S.trial * 15) : 900;
+    S.t0 = now(); runBar(S.limit);
+    S.tout = later(() => {
+      S.phase = 'done'; stopBar();
+      if (t === 'go') miss('늦었다!'); else ok(60, '잘 참았다');
+      later(GoNoGo.next, 600);
+    }, S.limit);
+  },
+  press() {
+    flashBtn(0);
+    if (!S.running) return;
+    if (S.phase === 'wait') {
+      clearTimers(); S.phase = 'done';
+      miss('너무 빨라!'); later(GoNoGo.next, 800);
+    } else if (S.phase === 'stim') {
+      clearTimeout(S.tout); stopBar(); S.phase = 'done';
+      const rt = Math.round(now() - S.t0);
+      if (S.stype === 'go') hit(rt, S.limit); else miss('함정이다!');
+      later(GoNoGo.next, 600);
+    }
+  },
+  arenaDown() { GoNoGo.press(); },
+  key(e) { if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); if (!e.repeat) GoNoGo.press(); } },
+};
+
+/* ---------- MODE 3: 화살표 반전 (Flanker + rule switch) ---------- */
+const arrowSvg = (dir, col) =>
+  `<svg class="arr" viewBox="0 0 24 24" style="color:${col};transform:scaleX(${dir})"><path fill="currentColor" d="M3 9.5h10V4.5l8 7.5-8 7.5v-5H3z"/></svg>`;
+const Flanker = {
+  title: '화살표 반전', color: '#3b82f6', trials: 24,
+  desc: '<b>가운데</b> 화살표 방향을 눌러라. 화살표가 <b style="color:#ef4444">빨간색</b>이면 반대로!',
+  keys: '좌우 버튼 탭 · PC는 ← →',
+  setup() {
+    controls.className = 'controls c2';
+    controls.innerHTML = '<button>&#x2190; 왼쪽<kbd>&#x2190;</kbd></button><button>오른쪽 &#x2192;<kbd>&#x2192;</kbd></button>';
+    bindBtn(controls.children[0], () => Flanker.input(-1));
+    bindBtn(controls.children[1], () => Flanker.input(1));
+  },
+  begin() { Flanker.next(); },
+  next() {
+    if (S.trial >= Flanker.trials) return end();
+    S.trial++; updHud(); S.accept = false; fullBar();
+    stage.innerHTML = '<div class="plus">+</div>';
+    later(() => {
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      const flank = Math.random() < 0.5 ? dir : -dir;
+      const red = S.trial > 3 && Math.random() < 0.35;
+      const col = red ? '#ef4444' : '#e8eaf0';
+      S.answer = red ? -dir : dir;
+      stage.innerHTML = `<div class="arrows">${[flank, flank, dir, flank, flank].map(d => arrowSvg(d, col)).join('')}</div>`;
+      S.limit = Math.max(800, 1650 - S.trial * 35); S.t0 = now(); S.accept = true;
+      runBar(S.limit);
+      S.tout = later(() => { S.accept = false; miss('시간 초과'); later(Flanker.next, 600); }, S.limit);
+    }, 300 + Math.random() * 400);
+  },
+  input(d) {
+    flashBtn(d < 0 ? 0 : 1);
+    if (!S.running || !S.accept) return;
+    S.accept = false; clearTimeout(S.tout); stopBar();
+    const rt = Math.round(now() - S.t0);
+    if (d === S.answer) hit(rt, S.limit); else miss('반대!');
+    later(Flanker.next, 450);
+  },
+  key(e) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); if (!e.repeat) Flanker.input(-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); if (!e.repeat) Flanker.input(1); }
+  },
+};
+
+/* ---------- MODE 4: 타겟 사냥 (Aim) ---------- */
+const Aim = {
+  title: '타겟 사냥', color: '#7c5cff', duration: 30000,
+  desc: '줄어드는 <b>타겟</b>을 사라지기 전에 탭. <b style="color:#ef4444">빨간 폭탄</b>은 금지. 헛탭도 감점.',
+  keys: '타겟 탭 · 30초',
+  setup() { controls.className = 'controls hidden'; controls.innerHTML = ''; $('#progLabel').textContent = '남은 시간'; $('#prog').textContent = '30.0s'; },
+  begin() {
+    S.start = now(); runBar(Aim.duration);
+    later(end, Aim.duration);
+    Aim.clock(); Aim.spawn();
+  },
+  clock() {
+    if (!S.running) return;
+    const left = Math.max(0, Aim.duration - (now() - S.start));
+    $('#prog').textContent = (left / 1000).toFixed(1) + 's';
+    S.raf = requestAnimationFrame(Aim.clock);
+  },
+  spawn() {
+    if (!S.running) return;
+    const p = Math.min(1, (now() - S.start) / Aim.duration);
+    const life = Math.round(1650 - p * 700);
+    const w = arena.clientWidth, h = arena.clientHeight;
+    // 화면 크기에 맞춘 타겟 크기 (손가락 기준 최소 52px)
+    const size = Math.round(Math.max(52, Math.min(88, Math.min(w, h) * 0.24) * (1 - p * 0.25)));
+    const bomb = p > 0.07 && Math.random() < 0.17;
+    const x = 8 + Math.random() * (w - size - 16), y = 8 + Math.random() * (h - size - 16);
+    const el = document.createElement('div');
+    el.className = 'target' + (bomb ? ' bomb' : '');
+    el.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px;animation-duration:${life}ms;--fs:${Math.round(size * 0.4)}px`;
+    const pos = { x: x + size / 2, y: y + size / 2 };
+    const born = now(); let done = false;
+    const tt = later(() => {
+      if (done) return; done = true; el.remove();
+      if (!bomb && S.running) miss('놓침', 20, pos);
+    }, life);
+    el.addEventListener('pointerdown', e => {
+      e.stopPropagation(); e.preventDefault();
+      if (done || !S.running) return; done = true; clearTimeout(tt);
+      el.classList.add('popped'); setTimeout(() => el.remove(), 200);
+      if (bomb) miss('폭탄!', 150, pos);
+      else hit(Math.round(now() - born), life, pos);
+    });
+    stage.appendChild(el);
+    later(Aim.spawn, Math.max(340, 740 - p * 360) * (0.7 + Math.random() * 0.6));
+  },
+  arenaDown(e) {
+    if (!S.running) return;
+    const r = arena.getBoundingClientRect();
+    miss('헛손질', 20, { x: e.clientX - r.left, y: e.clientY - r.top });
+  },
+  key() {},
+};
+
+const MODES = { stroop: Stroop, gonogo: GoNoGo, flanker: Flanker, aim: Aim };
+// 등급 기준 [S 평균ms, A 평균ms]. 터치는 입력 지연을 감안해 +40ms
+const GRADE_T = { stroop: [650, 850], gonogo: [330, 420], flanker: [480, 640], aim: [520, 720] };
+const TOUCH_BONUS = TOUCH ? 40 : 0;
+
+/* ---------- flow ---------- */
+function renderMenu() {
+  $('#cards').innerHTML = Object.entries(MODES).map(([k, m], i) => `
+    <div class="card" data-mode="${k}">
+      <div class="card-top"><div class="num" style="background:${m.color}">${i + 1}</div><h3>${m.title}</h3><span class="play">시작 &#x203A;</span></div>
+      <p>${m.desc}</p>
+      <div class="meta"><span>${m.keys}</span><span>최고 <b>${best(k).toLocaleString()}</b></span></div>
+    </div>`).join('');
+  document.querySelectorAll('.card').forEach(c => c.addEventListener('click', () => start(c.dataset.mode)));
+  $('#footTxt').innerHTML = TOUCH
+    ? '세로 화면 추천 · 무음 모드 해제 시 진동 피드백(안드로이드)<br>홈 화면에 추가하면 앱처럼 전체 화면으로 실행돼요'
+    : '숫자 1~4로 바로 시작 · 게임 중 Esc = 메뉴 · 결과 화면 R = 다시하기';
+}
+
+function stopGame() { if (S) { S.running = false; clearTimers(); } }
+
+function start(k) {
+  stopGame();
+  const m = MODES[k];
+  S = { k, m, score: 0, combo: 0, maxCombo: 0, trial: 0, correct: 0, wrong: 0, rts: [], timers: [], running: false, accept: false, phase: null };
+  show('game');
+  $('#modeTitle').textContent = m.title;
+  $('#hint').innerHTML = m.desc;
+  arena.className = 'arena ' + k;
+  arena.querySelectorAll('.fb').forEach(n => n.remove());
+  stage.innerHTML = '';
+  m.setup(); updHud(); fullBar();
+  let n = 3;
+  const tick = () => {
+    if (n === 0) { stage.innerHTML = ''; S.running = true; m.begin(); return; }
+    stage.innerHTML = `<div class="count">${n}</div>`; n--; later(tick, 650);
+  };
+  tick();
+}
+
+function end() {
+  if (!S || !S.running) return;
+  S.running = false; clearTimers(); stopBar();
+  stage.querySelectorAll('.target').forEach(t => t.remove());
+  const k = S.k, prev = best(k), isNew = S.score > prev;
+  if (isNew) setBest(k, S.score);
+  const total = S.correct + S.wrong;
+  const acc = total ? S.correct / total : 0;
+  const avg = S.rts.length ? Math.round(S.rts.reduce((a, b) => a + b, 0) / S.rts.length) : 0;
+  const [tS, tA] = GRADE_T[k].map(v => v + TOUCH_BONUS);
+  let g, c;
+  if (acc >= 0.95 && avg && avg < tS) { g = 'S'; c = '반응속도 괴물. 프로게이머 하셔도 됩니다.'; }
+  else if (acc >= 0.85 && avg && avg < tA) { g = 'A'; c = '상위권 반사신경. 조금만 더!'; }
+  else if (acc >= 0.7) { g = 'B'; c = '평균 이상. 함정만 조심하면 A 간다.'; }
+  else { g = 'C'; c = '뇌가 손을 못 따라가는 중. 한 판 더?'; }
+  const accTxt = k === 'aim' ? `${S.correct}/${total}` : Math.round(acc * 100) + '%';
+  $('#resultBody').innerHTML = `
+    <div class="rtitle">${S.m.title} 결과</div>
+    <div class="grade">${g}</div>
+    <div class="comment">${c}</div>
+    <div class="bigscore">${S.score.toLocaleString()}점${isNew ? '<span class="newbest">NEW BEST</span>' : ''}</div>
+    <div class="rgrid">
+      <div class="stat"><span>평균 반응</span><b>${avg || '-'}</b><small>ms</small></div>
+      <div class="stat"><span>${k === 'aim' ? '명중 / 시도' : '정확도'}</span><b>${accTxt}</b></div>
+      <div class="stat"><span>최대 콤보</span><b>${S.maxCombo}</b></div>
+      <div class="stat"><span>최고 점수</span><b>${Math.max(prev, S.score).toLocaleString()}</b></div>
+    </div>
+    <div class="btns">
+      <button class="primary" id="retry">다시하기</button>
+      <button class="second" id="toMenu">다른 게임</button>
+    </div>`;
+  S.resultAt = now();
+  show('result');
+  buzz(isNew ? [30, 60, 30, 60, 80] : 0);
+  // 결과 직후 연타로 바로 재시작되는 것 방지
+  const lock = fn => () => { if (now() - S.resultAt > 500) fn(); };
+  $('#retry').onclick = lock(() => start(k));
+  $('#toMenu').onclick = lock(toMenu);
+}
+
+function toMenu() { stopGame(); renderMenu(); show('menu'); }
+
+arena.addEventListener('pointerdown', e => { if (S && S.running && S.m.arenaDown) S.m.arenaDown(e); });
+$('#quit').addEventListener('pointerdown', e => { e.preventDefault(); toMenu(); });
+
+/* 모바일 제스처 차단: 스크롤 튕김, 더블탭 줌, 롱프레스 메뉴, 핀치 줌 */
+document.addEventListener('touchmove', e => { if ($('#menu').classList.contains('hidden')) e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
+document.addEventListener('gesturestart', e => e.preventDefault());
+
+/* 앱 전환/화면 꺼짐 시 게임 중단 (타이머 꼬임 방지) */
+document.addEventListener('visibilitychange', () => { if (document.hidden && S && !$('#game').classList.contains('hidden')) toMenu(); });
+
+document.addEventListener('keydown', e => {
+  const scr = !$('#game').classList.contains('hidden') ? 'game' : !$('#result').classList.contains('hidden') ? 'result' : 'menu';
+  if (e.code === 'Space') e.preventDefault();
+  if (e.key === 'Escape') { if (scr !== 'menu') toMenu(); return; }
+  if (scr === 'game' && S) S.m.key(e);
+  else if (scr === 'result' && S && now() - S.resultAt > 400 && (e.key === 'r' || e.key === 'R' || e.key === 'ㄱ')) start(S.k);
+  else if (scr === 'menu' && ['1', '2', '3', '4'].includes(e.key)) start(Object.keys(MODES)[+e.key - 1]);
+});
+
+renderMenu();
+</script>
+</body>
+</html>
